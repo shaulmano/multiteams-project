@@ -2,10 +2,9 @@
 node_modules/
 
 # Database
-server/data/*.db
-server/data/*.db-shm
-server/data/*.db-wal
-*.db
+**/*.db
+**/*.db-shm
+**/*.db-wal
 
 # Environment
 .env
