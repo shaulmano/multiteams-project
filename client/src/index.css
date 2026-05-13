@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: #0f1117;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  direction: rtl;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: #161b27; }
+::-webkit-scrollbar-thumb { background: #2d3654; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3d4a6e; }
+
+.health-on-track { @apply text-emerald-400 bg-emerald-400/10; }
+.health-warning  { @apply text-yellow-400 bg-yellow-400/10; }
+.health-at-risk  { @apply text-orange-400 bg-orange-400/10; }
+.health-overdue  { @apply text-red-400 bg-red-400/10; }
+
+.progress-bar {
+  @apply h-2 rounded-full overflow-hidden bg-dark-600;
+}
+.progress-fill {
+  @apply h-full rounded-full transition-all duration-500;
+}
