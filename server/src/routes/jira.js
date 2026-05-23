@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../db');
 const { getConfig, makeApiClient, syncProjectFromJira, syncAllProjects } = require('../services/jiraService');
+const { broadcast } = require('./events');
 
 router.get('/test', async (req, res) => {
   const config = getConfig();
@@ -45,6 +47,21 @@ router.post('/sync-all', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Jira webhook — called by Jira when an issue changes
+router.post('/webhook', async (req, res) => {
+  res.sendStatus(200); // acknowledge immediately
+  const issue = req.body?.issue;
+  if (!issue?.key) return;
+
+  const project = db.prepare('SELECT id FROM projects WHERE jira_project_key = ?')
+    .get(issue.key.split('-')[0]);
+  if (!project) return;
+
+  syncProjectFromJira(project.id)
+    .then(() => broadcast('sync', { source: 'jira', key: issue.key }))
+    .catch(e => console.error('[Webhook] Jira sync error:', e.message));
 });
 
 module.exports = router;

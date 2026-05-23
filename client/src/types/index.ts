@@ -5,11 +5,17 @@ export interface JiraConfig {
   created_at: string;
 }
 
+export interface MondayConfig {
+  id: number;
+  created_at: string;
+}
+
 export interface Project {
   id: number;
   name: string;
   description: string;
   jira_project_key?: string;
+  monday_board_id?: string;
   start_date: string;
   end_date: string;
   status: 'active' | 'completed' | 'on_hold';

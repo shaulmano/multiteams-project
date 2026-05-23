@@ -26,21 +26,21 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { name, description, jira_project_key, start_date, end_date } = req.body;
+  const { name, description, jira_project_key, monday_board_id, start_date, end_date } = req.body;
   if (!name || !start_date || !end_date) {
     return res.status(400).json({ error: 'name, start_date and end_date are required' });
   }
   const result = db.prepare(
-    'INSERT INTO projects (name, description, jira_project_key, start_date, end_date) VALUES (?, ?, ?, ?, ?)'
-  ).run(name, description || '', jira_project_key || null, start_date, end_date);
+    'INSERT INTO projects (name, description, jira_project_key, monday_board_id, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(name, description || '', jira_project_key || null, monday_board_id || null, start_date, end_date);
   res.status(201).json(db.prepare('SELECT * FROM projects WHERE id = ?').get(result.lastInsertRowid));
 });
 
 router.put('/:id', (req, res) => {
-  const { name, description, jira_project_key, start_date, end_date, status } = req.body;
+  const { name, description, jira_project_key, monday_board_id, start_date, end_date, status } = req.body;
   db.prepare(
-    'UPDATE projects SET name=?, description=?, jira_project_key=?, start_date=?, end_date=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?'
-  ).run(name, description, jira_project_key, start_date, end_date, status, req.params.id);
+    'UPDATE projects SET name=?, description=?, jira_project_key=?, monday_board_id=?, start_date=?, end_date=?, status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?'
+  ).run(name, description, jira_project_key, monday_board_id || null, start_date, end_date, status, req.params.id);
   res.json(db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id));
 });
 

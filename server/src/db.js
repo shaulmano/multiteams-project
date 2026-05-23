@@ -11,6 +11,12 @@ db.exec("PRAGMA journal_mode = WAL");
 db.exec("PRAGMA foreign_keys = ON");
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS monday_configs (
+    id INTEGER PRIMARY KEY,
+    api_token TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS jira_configs (
     id INTEGER PRIMARY KEY,
     base_url TEXT NOT NULL,
@@ -81,6 +87,9 @@ db.exec(`
     time_estimate INTEGER DEFAULT 0,
     time_remaining INTEGER DEFAULT 0,
     time_spent INTEGER DEFAULT 0,
+    time_estimation REAL,
+    remaining_hours REAL,
+    qa_owner TEXT DEFAULT '',
     priority TEXT DEFAULT 'Medium',
     due_date TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -112,6 +121,17 @@ db.exec(`
     synced_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
 `);
+
+// Add columns introduced after initial schema (safe to run repeatedly — fails silently if column exists)
+for (const col of [
+  'ALTER TABLE tasks ADD COLUMN time_estimation REAL',
+  'ALTER TABLE tasks ADD COLUMN remaining_hours REAL',
+  'ALTER TABLE tasks ADD COLUMN qa_owner TEXT DEFAULT \'\'',
+  'ALTER TABLE tasks ADD COLUMN monday_item_id TEXT',
+  'ALTER TABLE projects ADD COLUMN monday_board_id TEXT',
+]) {
+  try { db.exec(col); } catch (_) {}
+}
 
 // Wrap prepare to normalize lastInsertRowid to Number
 const origPrepare = db.prepare.bind(db);

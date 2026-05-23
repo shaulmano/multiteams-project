@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { getConfig, makeApiClient, makeAgileClient } = require('../services/jiraService');
+const { updateMondayItem } = require('../services/mondayService');
 
 async function updateJiraIssue(jiraKey, { title, status, priority, assignee, storyPoints }) {
   const config = getConfig();
@@ -105,6 +106,12 @@ router.put('/:id', async (req, res) => {
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
   if (task.jira_key) {
     updateJiraIssue(task.jira_key, { title, status, priority, assignee, storyPoints: story_points });
+  }
+  if (task.monday_item_id) {
+    const project = db.prepare('SELECT monday_board_id FROM projects WHERE id = ?').get(task.project_id);
+    if (project?.monday_board_id) {
+      updateMondayItem(task.monday_item_id, project.monday_board_id, { status, title });
+    }
   }
   res.json(task);
 });

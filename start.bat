@@ -11,4 +11,5 @@ echo.
 echo Press Ctrl+C to stop.
 echo.
 cd /d "%~dp0"
+set PATH=%PATH%;C:\Program Files\nodejs
 npm run dev

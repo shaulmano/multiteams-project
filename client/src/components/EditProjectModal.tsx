@@ -14,6 +14,7 @@ export default function EditProjectModal({ project, onClose, onSaved }: Props) {
     name: project.name,
     description: project.description || '',
     jira_project_key: project.jira_project_key || '',
+    monday_board_id: project.monday_board_id || '',
     start_date: project.start_date,
     end_date: project.end_date,
     status: project.status
@@ -32,7 +33,8 @@ export default function EditProjectModal({ project, onClose, onSaved }: Props) {
     try {
       const updated = await projectsApi.update(project.id, {
         ...form,
-        jira_project_key: form.jira_project_key.trim().toUpperCase() || undefined
+        jira_project_key: form.jira_project_key.trim().toUpperCase() || undefined,
+        monday_board_id: form.monday_board_id.trim() || undefined
       });
       onSaved(updated);
     } catch (e: any) {
@@ -88,6 +90,17 @@ export default function EditProjectModal({ project, onClose, onSaved }: Props) {
               onChange={e => set('jira_project_key', e.target.value.toUpperCase())}
             />
             <p className="text-xs text-gray-600 mt-1">מהרשימה שהופיעה בהגדרות Jira</p>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-400 mb-1.5">Monday Board ID</label>
+            <input
+              className="w-full bg-dark-700 border border-dark-500 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              placeholder="לדוגמה: 1234567890"
+              value={form.monday_board_id}
+              onChange={e => set('monday_board_id', e.target.value)}
+            />
+            <p className="text-xs text-gray-600 mt-1">ה-ID מופיע בהגדרות → Monday.com → בדוק חיבור</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

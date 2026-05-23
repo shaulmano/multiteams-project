@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { dashboardApi, jiraApi } from './api';
+import { dashboardApi, jiraApi, mondayApi } from './api';
 import type { Project } from './types';
 import Header from './components/Header';
 import ProjectCard from './components/ProjectCard';
@@ -34,6 +34,19 @@ export default function App() {
 
   useEffect(() => { loadProjects(); }, [loadProjects]);
 
+  // SSE — instant refresh when server detects a Jira/Monday change via webhook
+  useEffect(() => {
+    const es = new EventSource('/api/events');
+    es.addEventListener('sync', () => loadProjects());
+    return () => es.close();
+  }, [loadProjects]);
+
+  // Fallback polling every 2 min (when no webhook is configured)
+  useEffect(() => {
+    const id = setInterval(() => { if (!syncing) loadProjects(); }, 2 * 60_000);
+    return () => clearInterval(id);
+  }, [loadProjects, syncing]);
+
   const handleSyncAll = async () => {
     setSyncing(true);
     setSyncMessage('');
@@ -55,6 +68,21 @@ export default function App() {
     try {
       const res = await jiraApi.syncProject(projectId);
       setSyncMessage(`✓ עודכנו ${res.itemsSynced} משימות`);
+      await loadProjects();
+    } catch (e: any) {
+      setSyncMessage(`✗ ${e.response?.data?.error || e.message}`);
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncMessage(''), 5000);
+    }
+  };
+
+  const handleSyncMonday = async (projectId: number) => {
+    setSyncing(true);
+    setSyncMessage('');
+    try {
+      const res = await mondayApi.syncProject(projectId);
+      setSyncMessage(`✓ עודכנו ${res.itemsSynced} פריטים ממנדיי`);
       await loadProjects();
     } catch (e: any) {
       setSyncMessage(`✗ ${e.response?.data?.error || e.message}`);
@@ -150,14 +178,36 @@ export default function App() {
                   <FolderOpen size={15} />
                   ניהול צוותים
                 </button>
-                <button
-                  onClick={() => handleSyncProject(selectedProject.id)}
-                  disabled={syncing}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
-                  עדכן מ-Jira
-                </button>
+                {selectedProject.jira_project_key && (
+                  <button
+                    onClick={() => handleSyncProject(selectedProject.id)}
+                    disabled={syncing}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
+                    עדכן מ-Jira
+                  </button>
+                )}
+                {selectedProject.monday_board_id && (
+                  <button
+                    onClick={() => handleSyncMonday(selectedProject.id)}
+                    disabled={syncing}
+                    className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
+                    עדכן מ-Monday
+                  </button>
+                )}
+                {!selectedProject.jira_project_key && !selectedProject.monday_board_id && (
+                  <button
+                    onClick={() => handleSyncProject(selectedProject.id)}
+                    disabled={syncing}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
+                    עדכן מ-Jira
+                  </button>
+                )}
               </>
             )}
           </div>

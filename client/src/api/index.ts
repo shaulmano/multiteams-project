@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Project, Team, Task, JiraConfig, ProjectDetail } from '../types';
+import type { Project, Team, Task, JiraConfig, MondayConfig, ProjectDetail } from '../types';
 
 const api = axios.create({ baseURL: '/api' });
 
@@ -43,6 +43,14 @@ export const jiraApi = {
   syncProject: (projectId: number) =>
     api.post<{ success: boolean; itemsSynced: number }>(`/jira/sync/${projectId}`).then(r => r.data),
   syncAll: () => api.post('/jira/sync-all').then(r => r.data)
+};
+
+export const mondayApi = {
+  getConfig: () => api.get<MondayConfig | null>('/monday/config').then(r => r.data),
+  saveConfig: (api_token: string) => api.post('/monday/config', { api_token }).then(r => r.data),
+  deleteConfig: () => api.delete('/monday/config'),
+  test: () => api.get<{ success: boolean; user: { name: string; email: string }; boards: { id: string; name: string }[] }>('/monday/test').then(r => r.data),
+  syncProject: (projectId: number) => api.post<{ success: boolean; itemsSynced: number }>(`/monday/sync/${projectId}`).then(r => r.data),
 };
 
 export const dashboardApi = {

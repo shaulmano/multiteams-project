@@ -42,6 +42,19 @@ export default function ProjectDetail({ projectId }: { projectId: number }) {
 
   useEffect(() => { load(); }, [projectId]);
 
+  // SSE — instant refresh when webhook fires
+  useEffect(() => {
+    const es = new EventSource('/api/events');
+    es.addEventListener('sync', () => load());
+    return () => es.close();
+  }, [projectId]);
+
+  // Fallback polling every 2 min
+  useEffect(() => {
+    const id = setInterval(load, 2 * 60_000);
+    return () => clearInterval(id);
+  }, [projectId]);
+
   if (loading) return (
     <div className="flex items-center justify-center h-64 text-gray-500">
       <RefreshCw size={20} className="animate-spin ml-2" /> טוען נתונים...
